@@ -3,48 +3,51 @@ import numpy as np
 
 from utils.population import initialize_population
 from utils.bounds import apply_bounds
-from utils.solution import copy_solution
-from utils.selection import find_best, find_worst
-from functions.core import evaluate, compare_best, get_fes
+from functions.core import evaluate, get_fes, reset_fes
 
 
 def rao2(pop_size, D, lb, ub, max_fes, func_id):
     """
     Rao-2 algorithm with FES-based termination.
-    Tracks running best — records (fes, best_fitness) after every
-    individual update, not just at the end of each iteration.
+    Fitness values are cached — population is never re-evaluated.
+    Each candidate solution costs exactly 1 FES.
     """
 
     population = initialize_population(pop_size, D, lb, ub)
-    fitness_history = []   # (fes_count, best_fitness) pairs
 
-    # Establish initial running best
-    running_best = find_best(population, func_id)
-    running_best_f, _ = evaluate(running_best, func_id)
-    fitness_history.append((get_fes(), running_best_f))
+    # ── Evaluate initial population: costs pop_size FES ──
+    fitness = np.array([evaluate(population[i], func_id)[0]
+                        for i in range(pop_size)])
+
+    running_best_f = np.min(fitness)
+    running_best   = population[np.argmin(fitness)].copy()
+
+    fitness_history = [(get_fes(), running_best_f)]
 
     while get_fes() < max_fes:
 
-        best = find_best(population, func_id)
-        worst = find_worst(population, func_id)
-
-        if get_fes() >= max_fes:
-            break
+        # ── Best and worst from cache — 0 FES ──
+        best_idx  = int(np.argmin(fitness))
+        worst_idx = int(np.argmax(fitness))
+        best  = population[best_idx]
+        worst = population[worst_idx]
 
         for i in range(pop_size):
 
-            x = population[i]
-            x_new = copy_solution(x)
+            if get_fes() >= max_fes:
+                break
 
-            # Pick random partner (different from i)
+            x = population[i]
+
+            # Random partner (different from i)
             l = random.randint(0, pop_size - 1)
             while l == i:
                 l = random.randint(0, pop_size - 1)
             xl = population[l]
 
-            # Vectorised Rao-2 update
-            r1 = np.random.random(D)
-            r2 = np.random.random(D)
+            # ── Rao-2 update ──
+            r1   = np.random.random(D)
+            r2   = np.random.random(D)
             coin = np.random.random(D)
 
             second_term = np.where(
@@ -56,17 +59,18 @@ def rao2(pop_size, D, lb, ub, max_fes, func_id):
             x_new = x + r1 * (best - worst) + r2 * second_term
             x_new = apply_bounds(x_new, lb, ub)
 
-            # compare_best uses 2 FES
-            if get_fes() >= max_fes:
-                break
-            if compare_best(x_new, x, func_id) is x_new:
-                population[i] = x_new
+            # ── Evaluate candidate: costs exactly 1 FES ──
+            f_new, _ = evaluate(x_new, func_id)
 
-            # ── Running best: update after every individual ──
-            f_new, _ = evaluate(population[i], func_id)
-            if f_new < running_best_f:
-                running_best_f = f_new
-                running_best = population[i].copy()
+            # ── Greedy selection using cached fitness ──
+            if f_new <= fitness[i]:
+                population[i] = x_new
+                fitness[i]    = f_new
+
+            # ── Update running best ──
+            if fitness[i] < running_best_f:
+                running_best_f = fitness[i]
+                running_best   = population[i].copy()
 
             fitness_history.append((get_fes(), running_best_f))
 

@@ -15,24 +15,35 @@ def _extract_errors_at_checkpoints(history, max_fes, f_star):
     """
     Given a history of (fes_count, best_fitness) tuples,
     return error values (fitness - Fi*) at the 14 official checkpoints.
+
+    Uses searchsorted — correctly handles all edge cases without
+    breaking early or missing the last valid entry before a checkpoint.
     """
     checkpoint_fes = [frac * max_fes for frac in FES_CHECKPOINTS]
-    fes_vals = [fes for fes, _ in history]
-    fit_vals = [fit for _, fit in history]
+
+    fes_arr = np.array([fes for fes, _   in history], dtype=float)
+    fit_arr = np.array([fit for _,   fit in history], dtype=float)
 
     errors = []
     for cp_fes in checkpoint_fes:
-        # Find last recorded fitness at or before this checkpoint
-        error = fit_vals[0] - f_star  # default: first recorded
-        for fes, fit in history:
-            if fes <= cp_fes:
-                error = fit - f_star
-            else:
-                break
-        errors.append(max(error, 0.0))  # error should never be negative
+        # searchsorted finds insertion point — subtract 1 to get
+        # the last recorded entry AT OR BEFORE this checkpoint
+        idx = np.searchsorted(fes_arr, cp_fes, side='right') - 1
+
+        if idx < 0:
+            # No evaluations recorded before this checkpoint yet
+            # Use the very first recorded fitness as fallback
+            fit_at_cp = fit_arr[0]
+        else:
+            fit_at_cp = fit_arr[idx]
+
+        error = max(fit_at_cp - f_star, 0.0)
+        # Clamp to zero per official spec: errors < 1e-8 count as zero
+        if error < 1e-8:
+            error = 0.0
+        errors.append(error)
 
     return errors
-
 
 def run_experiment(func_id, dimension, lb, ub, pop_size, max_fes, runs):
 

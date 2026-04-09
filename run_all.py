@@ -1,0 +1,48 @@
+from runner import run_experiment
+from config import DIMENSIONS, POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
+from summarize import build_summary
+
+
+def main():
+    """
+    Automated script to run all 30 CEC2017 functions
+    across all configured dimensions.
+    """
+    # Loop through all 30 functions
+    for func_id in range(1, 31):
+        if func_id == 1 or func_id == 2:
+           continue
+
+        print(f"\n{'='*60}")
+        print(f" BEGINNING EVALUATION: FUNCTION F{func_id} ")
+        print(f"{'='*60}")
+
+        for dim in DIMENSIONS:
+            max_fes = MAX_FES_FACTOR * dim
+            print(f"\n[RUNNING] F{func_id} | D={dim} | MaxFES={max_fes} | Runs={RUNS}")
+            
+            try:
+                run_experiment(
+                    func_id,
+                    dim,
+                    LOWER_BOUND,
+                    UPPER_BOUND,
+                    POP_SIZE,
+                    max_fes,
+                    RUNS
+                )
+            except Exception as e:
+                print(f"ERROR in F{func_id} D{dim}: {e}")
+                continue
+
+    print("\n\n" + "#"*60)
+    print(" ALL 30 FUNCTIONS COMPLETED SUCCESSFULLY ")
+    print("#"*60 + "\n")
+
+    # Automatically generate the summary CSV
+    print("Generating final summary CSV...")
+    build_summary()
+
+
+if __name__ == "__main__":
+    main()
