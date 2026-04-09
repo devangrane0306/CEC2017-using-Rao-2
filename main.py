@@ -1,0 +1,28 @@
+from runner import run_experiment
+from config import DIMENSIONS, POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
+
+
+def main():
+    print("Select Function (1–30): ")
+    func_id = int(input())
+    
+    if func_id < 1 or func_id > 30:
+        print("Invalid function ID")
+        return
+
+    for dim in DIMENSIONS:
+        max_fes = MAX_FES_FACTOR * dim
+        print(f"\nRunning F{func_id} | Dimension = {dim} | MaxFES = {max_fes}")
+        run_experiment(
+            func_id,
+            dim,
+            LOWER_BOUND,
+            UPPER_BOUND,
+            POP_SIZE,
+            max_fes,
+            RUNS
+        )
+
+
+if __name__ == "__main__":
+    main()
