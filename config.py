@@ -1,6 +1,6 @@
-DIMENSIONS = [2]
+DIMENSIONS = [2, 10, 30, 50, 100]
 
-POP_SIZE = 20
+POP_SIZE = 30
 MAX_FES_FACTOR = 10000    # max_fes = MAX_FES_FACTOR * dimension  (CEC2017 standard)
 RUNS = 51                 # CEC2017 official: 51 independent runs
 
