@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from typing import List
 
 _rotation_cache = {}
 _shift_cache = {}
@@ -48,7 +49,9 @@ def generate_shift_vector(func_id: int, dimension: int) -> np.ndarray:
         
     # Read array from text
     shift = np.loadtxt(filepath)
-    
+    if shift.ndim == 2:
+        shift = shift[0]  # Just in case there are multiple lines (like in composition files parsed incorrectly)
+        
     # Official shift files contain up to 100 values. We truncate to the active dimension
     shift = shift[:dimension]
     
@@ -73,17 +76,62 @@ def generate_shuffle_vector(func_id: int, dimension: int) -> np.ndarray:
         
     # Read an array of integers and convert from 1-based (MATLAB) to 0-based (Python)
     shuffle = np.loadtxt(filepath, dtype=int) - 1
-    
+    if shuffle.ndim == 2:
+        shuffle = shuffle[0]
+        
     _shuffle_cache[cache_key] = shuffle
     return shuffle
 
 
-def clear_cache():
+def generate_rotation_matrices(func_id: int, dimension: int, n_funcs: int) -> List[np.ndarray]:
     """
-    Clear rotation, shift, and shuffle caches.
-    Matches the clear_transform_cache() interface.
+    Reads multiple rotation matrices from a stacked M_{func_id}_D{dimension} file 
+    for Composition Functions (F21-F30).
     """
-    global _rotation_cache, _shift_cache, _shuffle_cache
-    _rotation_cache.clear()
-    _shift_cache.clear()
-    _shuffle_cache.clear()
+    filepath = os.path.join(DATA_DIR, f"M_{func_id}_D{dimension}.m")
+    if not os.path.exists(filepath):
+        filepath = os.path.join(DATA_DIR, f"M_{func_id}_D{dimension}.txt")
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"[CEC2017 Error] Rotation matrices missing: '{filepath}'.")
+        
+    M = np.loadtxt(filepath)
+    matrices = []
+    for i in range(n_funcs):
+        matrices.append(M[i * dimension : (i + 1) * dimension, :])
+    return matrices
+
+
+def generate_shift_vectors(func_id: int, dimension: int, n_funcs: int) -> List[np.ndarray]:
+    """
+    Reads multiple shift vectors from a stacked shift_data_{func_id}.txt file
+    """
+    filepath = os.path.join(DATA_DIR, f"shift_data_{func_id}.m")
+    if not os.path.exists(filepath):
+        filepath = os.path.join(DATA_DIR, f"shift_data_{func_id}.txt")
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"[CEC2017 Error] Shift vectors missing: '{filepath}'.")
+        
+    shifts = np.loadtxt(filepath)
+    vectors = []
+    for i in range(n_funcs):
+        # We take the first dimension elements of each row
+        vectors.append(shifts[i, :dimension])
+    return vectors
+
+
+def generate_shuffle_vectors(func_id: int, dimension: int, n_funcs: int) -> List[np.ndarray]:
+    """
+    Reads multiple shuffle vectors from a stacked shuffle_data_{func_id}_D{dimension}.txt file
+    """
+    filepath = os.path.join(DATA_DIR, f"shuffle_data_{func_id}_D{dimension}.m")
+    if not os.path.exists(filepath):
+        filepath = os.path.join(DATA_DIR, f"shuffle_data_{func_id}_D{dimension}.txt")
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"[CEC2017 Error] Shuffle vectors missing: '{filepath}'.")
+        
+    shuffles = np.loadtxt(filepath, dtype=int) - 1
+    vectors = []
+    for i in range(n_funcs):
+        vectors.append(shuffles[i, :dimension])
+    return vectors
+

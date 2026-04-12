@@ -1,5 +1,5 @@
 from runner import run_experiment
-from config import DIMENSIONS, POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
+from config import POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
 
 
 def main():
@@ -10,7 +10,12 @@ def main():
         print("Invalid function ID")
         return
 
-    for dim in DIMENSIONS:
+    if 1 <= func_id <= 10:
+        dims_to_run = [2, 10]
+    else:
+        dims_to_run = [10]
+
+    for dim in dims_to_run:
         max_fes = MAX_FES_FACTOR * dim
         print(f"\nRunning F{func_id} | Dimension = {dim} | MaxFES = {max_fes}")
         run_experiment(
