@@ -1,6 +1,6 @@
-from cec2017_rao2.runner import run_experiment
-from cec2017_rao2.config import POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
-from summarize import build_summary
+from .runner import run_experiment
+from .config import POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
+from .summarize import build_summary
 
 
 def main():
