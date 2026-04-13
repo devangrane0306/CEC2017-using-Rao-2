@@ -5,7 +5,7 @@ This package provides tools for benchmarking optimization algorithms
 on the CEC2017 test suite using the Rao-2 algorithm.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Lakshya Maheshwari"
 __email__ = "your.email@example.com"  # Replace with your actual email
 

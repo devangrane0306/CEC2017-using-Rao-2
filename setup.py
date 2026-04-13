@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="cec2017-rao2",
-    version="0.1.0",
+    version="0.1.1",
     author="Lakshya Maheshwari",
     author_email="your.email@example.com",  # Replace with your actual email
     description="CEC2017 benchmark suite using Rao-2 optimization algorithm",
