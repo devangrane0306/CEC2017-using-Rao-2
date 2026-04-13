@@ -1,0 +1,109 @@
+# CEC2017-Rao2
+
+CEC2017 benchmark suite implementation using the Rao-2 optimization algorithm.
+
+## Description
+
+This package provides an implementation of the CEC2017 benchmark functions optimized using the Rao-2 algorithm. The CEC2017 suite consists of 30 benchmark functions for single-objective optimization, and this implementation allows for easy experimentation and comparison of optimization algorithms.
+
+## Installation
+
+### From PyPI
+```bash
+pip install cec2017-rao2
+```
+
+### From GitHub
+```bash
+pip install git+https://github.com/LakshyMaheshwari/CEC2017-using-Rao-2-.git
+```
+
+### From Source
+```bash
+git clone https://github.com/LakshyMaheshwari/CEC2017-using-Rao-2-.git
+cd CEC2017-using-Rao-2-
+pip install -e .
+```
+
+## Quick Start
+
+```python
+from cec2017_rao2.runner import run_experiment
+
+# Run function 1 in 10 dimensions
+run_experiment(
+    func_id=1,
+    dimension=10,
+    lb=-100,
+    ub=100,
+    pop_size=30,
+    max_fes=100000,
+    runs=51
+)
+```
+
+## Project Structure
+
+```
+cec2017_rao2/
+├── algorithms/          # Optimization algorithms (Rao-2)
+├── functions/           # Benchmark functions
+│   └── cec2017/         # CEC2017 specific functions and data
+├── utils/               # Utility functions
+└── visualization/       # Plotting and visualization tools
+```
+
+## Requirements
+
+- Python >= 3.7
+- numpy
+- scipy
+- matplotlib
+
+## Usage
+
+### Running Experiments
+
+Use the provided `main.py` script for interactive experimentation:
+
+```bash
+python main.py
+```
+
+Select a function ID (1-30) and the system will run the appropriate experiments.
+
+### Using the Library
+
+Import and use individual components:
+
+```python
+from cec2017_rao2.algorithms.rao2 import rao2
+from cec2017_rao2.functions.core import evaluate
+```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## Citation
+
+If you use this code in your research, please cite:
+
+```
+@software{cec2017_rao2,
+  author = {Lakshya Maheshwari},
+  title = {CEC2017-Rao2: CEC2017 benchmark suite using Rao-2 optimization},
+  url = {https://github.com/LakshyMaheshwari/CEC2017-using-Rao-2-},
+  version = {0.1.0},
+}
+```

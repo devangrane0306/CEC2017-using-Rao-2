@@ -3,13 +3,15 @@ import matplotlib.pyplot as plt
 import os
 from matplotlib import cm
 
+from ..functions.core import get_fes, fes_counter
+from ..functions.get_function import get_function
+
 
 def plot_2d_contour(func_id, best_solution, lb, ub):
     # D = 2 is enforced for visualization
     D = 2
 
     # ── Save and restore FES so visualization doesn't corrupt run stats ──
-    from functions.core import get_fes, fes_counter
     fes_before = get_fes()
 
     # 1. Build grid (resolution=100)
@@ -19,9 +21,7 @@ def plot_2d_contour(func_id, best_solution, lb, ub):
 
     # 2. Evaluate all points — uses the benchmark function directly,
     # bypassing the FES counter to keep visualization free of side effects
-    func = __import__(
-        'functions.get_function', fromlist=['get_function']
-    ).get_function(func_id)["objective"]
+    func = get_function(func_id)["objective"]
 
     # Vectorized evaluation for efficiency
     points = np.column_stack([X.ravel(), Y.ravel()])

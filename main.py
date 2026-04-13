@@ -1,5 +1,5 @@
-from runner import run_experiment
-from config import POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
+from cec2017_rao2.runner import run_experiment
+from cec2017_rao2.config import POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
 
 
 def main():
@@ -10,7 +10,9 @@ def main():
         print("Invalid function ID")
         return
 
-    if 1 <= func_id <= 10:
+    if func_id == 29 or func_id == 30:
+        dims_to_run = [10]
+    elif 1 <= func_id <= 10 or 21 <= func_id <= 28:
         dims_to_run = [2, 10]
     else:
         dims_to_run = [10]

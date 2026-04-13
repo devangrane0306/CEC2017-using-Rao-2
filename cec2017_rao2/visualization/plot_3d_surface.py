@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from functions.core import evaluate, reset_fes, get_fes
+
+from ..functions.core import evaluate, reset_fes, get_fes, fes_counter
+from ..functions.get_function import get_function
 
 
 def plot_3d_surface(func_id, best_solution, lb, ub, resolution=100):
@@ -25,9 +27,7 @@ def plot_3d_surface(func_id, best_solution, lb, ub, resolution=100):
 
     # Evaluate all points — uses the benchmark function directly,
     # bypassing the FES counter to keep visualization free of side effects
-    func = __import__(
-        'functions.get_function', fromlist=['get_function']
-    ).get_function(func_id)["objective"]
+    func = get_function(func_id)["objective"]
 
     Z_flat = np.array([func(points[i]) for i in range(len(points))])
     Z = Z_flat.reshape(X.shape)
@@ -37,7 +37,6 @@ def plot_3d_surface(func_id, best_solution, lb, ub, resolution=100):
 
     # ── Restore FES counter ──
     # Visualization should never count toward the algorithm budget
-    from functions.core import fes_counter
     fes_counter.set(fes_before)
 
     # ── Plot ──

@@ -1,10 +1,11 @@
-"""All 30 CEC2017 Benchmark Functions
+"""
+All 30 CEC2017 Benchmark Functions
 Official CEC2017 benchmark functions implementation.
-Uses synthetic random transformations for F1-F30.
+
 """
 
 import numpy as np
-from typing import Optional, List, Tuple, Callable
+from typing import Optional, List, Callable
 from .data_loader import (
     generate_rotation_matrix, generate_shift_vector, generate_shuffle_vector,
     generate_rotation_matrices, generate_shift_vectors, generate_shuffle_vectors
@@ -19,7 +20,7 @@ def bent_cigar(x: np.ndarray) -> np.ndarray:
     if x.ndim == 1:
         x = x.reshape(1, -1)
     sm = np.sum(x[:, 1:] * x[:, 1:], axis=1)
-    sm = sm * 10e6
+    sm = sm * 1e6
     return x[:, 0] * x[:, 0] + sm
 
 
@@ -431,7 +432,6 @@ def f6(x: np.ndarray, rotation: Optional[np.ndarray] = None, shift: Optional[np.
     if shift is None:
         shift = generate_shift_vector(6, nx)
     
-    # Scale: 0.5/100 applied after shift, before rotation
     scaled = 0.5 * (x - np.expand_dims(shift, 0)) / 100.0
     x_transformed = np.matmul(np.expand_dims(rotation, 0), np.expand_dims(scaled, -1))[:, :, 0]
     return float(schaffers_f7(x_transformed)[0] + 600.0)
@@ -451,8 +451,6 @@ def f7(x: np.ndarray, rotation: Optional[np.ndarray] = None, shift: Optional[np.
     if shift is None:
         shift = generate_shift_vector(7, nx)
 
-    # Lunacek handles shift/rotation internally, but needs pre-scaling
-    # Scale shifted input by 600/100 before passing
     x_scaled = (x - np.expand_dims(shift, 0)) * (600.0 / 100.0) + np.expand_dims(shift, 0)
     return float(lunacek_bi_rastrigin(x_scaled, shift, rotation)[0] + 700.0)
 
@@ -471,7 +469,6 @@ def f8(x: np.ndarray, rotation: Optional[np.ndarray] = None, shift: Optional[np.
     if shift is None:
         shift = generate_shift_vector(8, nx)
 
-    # Scale only — non_cont_rastrigin handles shift/rotation internally
     x_scaled = (x - np.expand_dims(shift, 0)) * (5.12 / 100.0) + np.expand_dims(shift, 0)
     return float(non_cont_rastrigin(x_scaled, shift, rotation)[0] + 800.0)
 
@@ -490,7 +487,6 @@ def f9(x: np.ndarray, rotation: Optional[np.ndarray] = None, shift: Optional[np.
     if shift is None:
         shift = generate_shift_vector(9, nx)
 
-    # Scale: 5.12/100 applied after shift, before rotation
     scaled = 5.12 * (x - np.expand_dims(shift, 0)) / 100.0
     x_transformed = np.matmul(np.expand_dims(rotation, 0), np.expand_dims(scaled, -1))[:, :, 0]
     return float(levy(x_transformed)[0] + 900.0)
@@ -510,7 +506,6 @@ def f10(x: np.ndarray, rotation: Optional[np.ndarray] = None, shift: Optional[np
     if shift is None:
         shift = generate_shift_vector(10, nx)
 
-    # Scale only — no external rotation for Schwefel per official spec
     scaled = 1000.0 * (x - np.expand_dims(shift, 0)) / 100.0
     return float(modified_schwefel(scaled)[0] + 1000.0)
 
@@ -570,7 +565,6 @@ def f12(x: np.ndarray, rotation: Optional[np.ndarray] = None, shift: Optional[np
         x = x.reshape(1, -1)
     nx = x.shape[1]
     
-    # Skip partitioning for very small dimensions to avoid empty partitions
     if nx < 3:
         if rotation is None:
             rotation = generate_rotation_matrix(12, nx)
@@ -630,7 +624,6 @@ def f14(x: np.ndarray, rotation: Optional[np.ndarray] = None, shift: Optional[np
         x = x.reshape(1, -1)
     nx = x.shape[1]
     
-    # Skip partitioning for very small dimensions to avoid empty partitions
     if nx < 4:
         if rotation is None:
             rotation = generate_rotation_matrix(14, nx)
@@ -743,8 +736,7 @@ def f18(x: np.ndarray, rotation: Optional[np.ndarray] = None, shift: Optional[np
     if x.ndim == 1:
         x = x.reshape(1, -1)
     nx = x.shape[1]
-    
-    # Skip partitioning for very small dimensions to avoid empty partitions
+
     if nx < 5:
         if rotation is None:
             rotation = generate_rotation_matrix(18, nx)
@@ -810,7 +802,6 @@ def f20(x: np.ndarray, rotation: Optional[np.ndarray] = None, shift: Optional[np
         x = x.reshape(1, -1)
     nx = x.shape[1]
     
-    # Skip partitioning for very small dimensions to avoid empty partitions
     if nx < 6:
         if rotation is None:
             rotation = generate_rotation_matrix(20, nx)
@@ -1022,10 +1013,91 @@ def f28(x: np.ndarray) -> float:
     
     return float(_composition(x, rotations, shifts, funcs, sigmas, lambdas, biases)[0] + 2800.0)
 
+# ── Bare hybrid evaluators for use inside composition ─────────────────────
+# These receive already-transformed input from _composition.
+# They must NOT apply their own shift/rotation.
+
+def _hybrid5_bare(x: np.ndarray) -> float:
+    """F15 (Hybrid 5) — no internal shift/rotation."""
+    x = np.array(x)
+    if x.ndim == 1:
+        x = x.reshape(1, -1)
+    nx = x.shape[1]
+    shuffle = np.arange(nx)
+    x_parts = shuffle_and_partition(x, shuffle, [0.2, 0.2, 0.3, 0.3])
+    y  = bent_cigar(x_parts[0])[0]
+    y += h_g_bat(x_parts[1])[0]
+    y += rastrigin(x_parts[2])[0]
+    y += rosenbrock(x_parts[3])[0]
+    return float(y)
+
+
+def _hybrid6_bare(x: np.ndarray) -> float:
+    """F16 (Hybrid 6) — no internal shift/rotation."""
+    x = np.array(x)
+    if x.ndim == 1:
+        x = x.reshape(1, -1)
+    nx = x.shape[1]
+    shuffle = np.arange(nx)
+    x_parts = shuffle_and_partition(x, shuffle, [0.2, 0.2, 0.3, 0.3])
+    y  = expanded_schaffers_f6(x_parts[0])[0]
+    y += h_g_bat(x_parts[1])[0]
+    y += rosenbrock(x_parts[2])[0]
+    y += modified_schwefel(x_parts[3])[0]
+    return float(y)
+
+
+def _hybrid7_bare(x: np.ndarray) -> float:
+    """F17 (Hybrid 7) — no internal shift/rotation."""
+    x = np.array(x)
+    if x.ndim == 1:
+        x = x.reshape(1, -1)
+    nx = x.shape[1]
+    shuffle = np.arange(nx)
+    x_parts = shuffle_and_partition(x, shuffle, [0.1, 0.2, 0.2, 0.2, 0.3])
+    y  = katsuura(x_parts[0])[0]
+    y += ackley(x_parts[1])[0]
+    y += expanded_griewanks_plus_rosenbrock(x_parts[2])[0]
+    y += modified_schwefel(x_parts[3])[0]
+    y += rastrigin(x_parts[4])[0]
+    return float(y)
+
+
+def _hybrid8_bare(x: np.ndarray) -> float:
+    """F18 (Hybrid 8) — no internal shift/rotation."""
+    x = np.array(x)
+    if x.ndim == 1:
+        x = x.reshape(1, -1)
+    nx = x.shape[1]
+    shuffle = np.arange(nx)
+    x_parts = shuffle_and_partition(x, shuffle, [0.2, 0.2, 0.2, 0.2, 0.2])
+    y  = high_conditioned_elliptic(x_parts[0])[0]
+    y += ackley(x_parts[1])[0]
+    y += rastrigin(x_parts[2])[0]
+    y += h_g_bat(x_parts[3])[0]
+    y += discus(x_parts[4])[0]
+    return float(y)
+
+
+def _hybrid9_bare(x: np.ndarray) -> float:
+    """F19 (Hybrid 9) — no internal shift/rotation."""
+    x = np.array(x)
+    if x.ndim == 1:
+        x = x.reshape(1, -1)
+    nx = x.shape[1]
+    shuffle = np.arange(nx)
+    x_parts = shuffle_and_partition(x, shuffle, [0.2, 0.2, 0.2, 0.2, 0.2])
+    y  = bent_cigar(x_parts[0])[0]
+    y += rastrigin(x_parts[1])[0]
+    y += expanded_griewanks_plus_rosenbrock(x_parts[2])[0]
+    y += weierstrass(x_parts[3])[0]
+    y += expanded_schaffers_f6(x_parts[4])[0]
+    return float(y)
+
 
 def f29(x: np.ndarray) -> float:
     """F29: Composition Function 9 (N=3)
-    Components: Hybrid F5 (f15), Hybrid F8 (f18), Hybrid F9 (f19)
+    Components: Hybrid 5, Hybrid 8, Hybrid 9 — bare (no internal shift)
     sigma=[10,30,50], lambda=[1,1,1], bias=[0,100,200]
     """
     x = np.array(x)
@@ -1034,24 +1106,18 @@ def f29(x: np.ndarray) -> float:
     nx = x.shape[1]
 
     rotations = generate_rotation_matrices(29, nx, 3)
-    shifts = generate_shift_vectors(29, nx, 3)
-
-    # Strip bias from hybrid functions before composition
-    def g1(z): return f15(z) - 1500.0
-    def g2(z): return f18(z) - 1800.0
-    def g3(z): return f19(z) - 1900.0
-
-    funcs = [g1, g2, g3]
-    sigmas  = np.array([10.0, 30.0, 50.0])
-    lambdas = np.array([1.0,  1.0,  1.0])
-    biases  = np.array([0.0,  100.0, 200.0])
+    shifts    = generate_shift_vectors(29, nx, 3)
+    funcs     = [_hybrid5_bare, _hybrid8_bare, _hybrid9_bare]
+    sigmas    = np.array([10.0, 30.0, 50.0])
+    lambdas   = np.array([1.0,  1.0,  1.0])
+    biases    = np.array([0.0,  100.0, 200.0])
 
     return float(_composition(x, rotations, shifts, funcs, sigmas, lambdas, biases)[0] + 2900.0)
 
 
 def f30(x: np.ndarray) -> float:
     """F30: Composition Function 10 (N=3)
-    Components: Hybrid F5 (f15), Hybrid F6 (f16), Hybrid F7 (f17)
+    Components: Hybrid 5, Hybrid 6, Hybrid 7 — bare (no internal shift)
     sigma=[10,30,50], lambda=[1,1,1], bias=[0,100,200]
     """
     x = np.array(x)
@@ -1060,20 +1126,13 @@ def f30(x: np.ndarray) -> float:
     nx = x.shape[1]
 
     rotations = generate_rotation_matrices(30, nx, 3)
-    shifts = generate_shift_vectors(30, nx, 3)
-
-    # Strip bias from hybrid functions before composition
-    def g1(z): return f15(z) - 1500.0
-    def g2(z): return f16(z) - 1600.0
-    def g3(z): return f17(z) - 1700.0
-
-    funcs = [g1, g2, g3]
-    sigmas  = np.array([10.0, 30.0, 50.0])
-    lambdas = np.array([1.0,  1.0,  1.0])
-    biases  = np.array([0.0,  100.0, 200.0])
+    shifts    = generate_shift_vectors(30, nx, 3)
+    funcs     = [_hybrid5_bare, _hybrid6_bare, _hybrid7_bare]
+    sigmas    = np.array([10.0, 30.0, 50.0])
+    lambdas   = np.array([1.0,  1.0,  1.0])
+    biases    = np.array([0.0,  100.0, 200.0])
 
     return float(_composition(x, rotations, shifts, funcs, sigmas, lambdas, biases)[0] + 3000.0)
-
 
 # ============================================================================
 # Complete Function Dictionary

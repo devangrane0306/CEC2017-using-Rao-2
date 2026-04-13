@@ -1,5 +1,5 @@
-from runner import run_experiment
-from config import POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
+from cec2017_rao2.runner import run_experiment
+from cec2017_rao2.config import POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
 from summarize import build_summary
 
 
@@ -11,7 +11,7 @@ def main():
     # Loop through all 30 functions
     for func_id in range(1, 31):
         if func_id == 2:
-           continue
+            continue
 
         print(f"\n{'='*60}")
         print(f" BEGINNING EVALUATION: FUNCTION F{func_id} ")

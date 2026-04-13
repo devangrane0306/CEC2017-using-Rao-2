@@ -2,13 +2,13 @@ import numpy as np
 import random
 import time
 
-from algorithms.rao2 import rao2
-from functions.core import evaluate, reset_fes, get_fes, get_optimal_value
-from visualization.plot_convergence import plot_convergence
-from visualization.plot_3d_surface import plot_3d_surface
-from visualization.plot_2d_contour import plot_2d_contour
+from .algorithms.rao2 import rao2
+from .functions.core import evaluate, reset_fes, get_fes, get_optimal_value
+from .visualization.plot_convergence import plot_convergence
+from .visualization.plot_3d_surface import plot_3d_surface
+from .visualization.plot_2d_contour import plot_2d_contour
 from results.save_csv import save_results
-from config import FES_CHECKPOINTS
+from .config import FES_CHECKPOINTS
 
 
 def _extract_errors_at_checkpoints(history, max_fes, f_star):

@@ -8,7 +8,7 @@ Usage:
 
 import os
 import csv
-from config import DIMENSIONS
+from cec2017_rao2.config import DIMENSIONS
 
 
 def parse_result_file(filepath):
