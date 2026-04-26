@@ -1,6 +1,5 @@
 DIMENSIONS = [2, 10, 20, 30, 50, 100]
 
-ALGORITHMS = ["rao1", "rao2", "rao3", "fisa"]
 
 POP_SIZE = 30
 MAX_FES_FACTOR = 10000    # max_fes = MAX_FES_FACTOR * dimension  (CEC2017 standard)

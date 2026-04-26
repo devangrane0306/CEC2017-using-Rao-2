@@ -1,8 +1,8 @@
 """
-CEC2017-Rao2: CEC2017 benchmark suite using Rao-2 optimization algorithm.
+CEC2017 Benchmark Suite — Rao-1, Rao-2, Rao-3 & FISA.
 
-This package provides tools for benchmarking optimization algorithms
-on the CEC2017 test suite using the Rao-2 algorithm.
+This package provides tools for benchmarking metaheuristic optimization
+algorithms on the CEC2017 test suite.
 """
 
 __version__ = "0.1.1"

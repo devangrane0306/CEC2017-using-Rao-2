@@ -1,10 +1,17 @@
-# CEC2017-Rao2
+# CEC2017 Benchmark Suite
 
-CEC2017 benchmark suite implementation using the Rao-2 optimization algorithm.
+CEC2017 benchmark suite implementation using **Rao-1, Rao-2, Rao-3 & FISA** metaheuristic optimization algorithms.
 
 ## Description
 
-This package provides an implementation of the CEC2017 benchmark functions optimized using the Rao-2 algorithm. The CEC2017 suite consists of 30 benchmark functions for single-objective optimization, and this implementation allows for easy experimentation and comparison of optimization algorithms.
+This package provides an implementation of the CEC2017 benchmark functions (30 single-objective optimization problems) with four metaheuristic optimizers:
+
+| Algorithm | Description |
+|-----------|-------------|
+| **Rao-1** | Best–worst directional perturbation |
+| **Rao-2** | Rao-1 + random partner interaction term |
+| **Rao-3** | Rao-2 + second random partner interaction term |
+| **FISA**  | Fitness-based Individual-Step Algorithm |
 
 ## Installation
 
@@ -27,11 +34,26 @@ pip install -e .
 
 ## Quick Start
 
-```python
-from cec2017_rao2.runner import run_experiment
+### Interactive Mode
+```bash
+cd CEC2017-using-Rao-2-
+python -m CEC2017.main
+```
+You'll see a menu to select an algorithm (or all four) and a function number.
 
-# Run function 1 in 10 dimensions
+### Run All Benchmarks
+```bash
+python -m CEC2017.run_all
+```
+Runs all 4 algorithms × 30 functions × all dimensions automatically.
+
+### Programmatic Usage
+```python
+from CEC2017.runner import run_experiment
+
+# Run Rao-1 on function F1, dimension 10
 run_experiment(
+    algo_name="rao1",
     func_id=1,
     dimension=10,
     lb=-100,
@@ -45,12 +67,33 @@ run_experiment(
 ## Project Structure
 
 ```
-cec2017_rao2/
-├── algorithms/          # Optimization algorithms (Rao-2)
-├── functions/           # Benchmark functions
-│   └── cec2017/         # CEC2017 specific functions and data
-├── utils/               # Utility functions
-└── visualization/       # Plotting and visualization tools
+CEC2017/
+├── algorithms/          # Rao-1, Rao-2, Rao-3, FISA implementations
+├── functions/           # CEC2017 benchmark functions & data files
+│   └── cec2017/         # Official shift/rotation data
+├── utils/               # Population initialization, bounds handling
+├── visualization/       # Convergence, 3D surface, 2D contour plots
+├── runner.py            # Experiment orchestrator (per algo × func × dim)
+├── main.py              # Interactive CLI with algorithm selection
+├── run_all.py           # Batch runner for all algorithms × all functions
+├── summarize.py         # Crawl results/ and build summary CSV
+├── results.py           # CEC2017-format .txt output writer
+└── config.py            # Constants (pop size, FES factor, checkpoints)
+```
+
+## Output Structure
+
+Results are organized by algorithm:
+```
+results/
+├── rao1/F1/             # Rao-1 results for F1
+│   ├── rao1_F1_D10.txt
+│   ├── rao1_convergence_D10.png
+│   └── ...
+├── rao2/F1/             # Rao-2 results for F1
+├── fisa/F1/             # FISA results for F1
+├── comparison_summary.csv   # Cross-algorithm comparison (upsert)
+└── summary.csv              # Full summary across all results
 ```
 
 ## Requirements
@@ -59,26 +102,10 @@ cec2017_rao2/
 - numpy
 - scipy
 - matplotlib
-
-## Usage
-
-### Running Experiments
-
-Use the provided `main.py` script for interactive experimentation:
+- tqdm
 
 ```bash
-python main.py
-```
-
-Select a function ID (1-30) and the system will run the appropriate experiments.
-
-### Using the Library
-
-Import and use individual components:
-
-```python
-from cec2017_rao2.algorithms.rao2 import rao2
-from cec2017_rao2.functions.core import evaluate
+pip install -r requirements.txt
 ```
 
 ## License
@@ -100,10 +127,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 If you use this code in your research, please cite:
 
 ```
-@software{cec2017_rao2,
+@software{cec2017_benchmark,
   author = {Lakshya Maheshwari},
-  title = {CEC2017-Rao2: CEC2017 benchmark suite using Rao-2 optimization},
+  title = {CEC2017 Benchmark Suite — Rao-1, Rao-2, Rao-3 & FISA},
   url = {https://github.com/LakshyMaheshwari/CEC2017-using-Rao-2-},
-  version = {0.1.0},
+  version = {0.2.0},
 }
 ```

@@ -8,8 +8,7 @@ from CEC2017.functions.get_function import get_function
 
 
 def plot_2d_contour(func_id, best_solution, lb, ub, algo_name=None):
-    # D = 2 is enforced for visualization
-    pass
+    """Plot 2D contour map of a 2D function landscape. D=2 only."""
 
     # ── Save and restore FES so visualization doesn't corrupt run stats ──
     fes_before = get_fes()
