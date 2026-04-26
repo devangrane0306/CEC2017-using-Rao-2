@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import os
 
 
-def plot_convergence(all_histories, func_id, dimension, f_star):
+def plot_convergence(all_histories, func_id, dimension, f_star, algo_name=None):
     """
     Plot convergence curve: error (Fi(x) - Fi*) vs FES.
 
@@ -11,7 +11,12 @@ def plot_convergence(all_histories, func_id, dimension, f_star):
                    (fes_count, best_fitness) tuples from one run.
     f_star: optimal value Fi* for the function.
     """
-    folder = f"results/F{func_id}"
+    if algo_name:
+        folder = f"results/{algo_name}/F{func_id}"
+        prefix = f"{algo_name}_"
+    else:
+        folder = f"results/F{func_id}"
+        prefix = ""
     os.makedirs(folder, exist_ok=True)
 
     plt.figure()
@@ -41,6 +46,6 @@ def plot_convergence(all_histories, func_id, dimension, f_star):
     plt.yscale("log")
     plt.grid(True, which="both", ls="--", alpha=0.5)
 
-    file_path = f"{folder}/convergence_D{dimension}.png"
+    file_path = f"{folder}/{prefix}convergence_D{dimension}.png"
     plt.savefig(file_path)
     plt.close()

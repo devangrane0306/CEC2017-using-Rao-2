@@ -1,0 +1,4 @@
+Best solution for F1 D2:
+Decision variables:
+x1	-5.680204e+01
+x2	-6.976927e+01

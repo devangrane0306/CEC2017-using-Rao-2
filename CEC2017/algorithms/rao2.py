@@ -1,9 +1,9 @@
 import random
 import numpy as np
 
-from CEC2017.utils.population import initialize_population
-from CEC2017.utils.bounds import apply_bounds
-from CEC2017.functions.core import evaluate, get_fes
+from ..utils.population import initialize_population
+from ..utils.bounds import apply_bounds
+from ..functions.core import evaluate, get_fes
 
 
 def rao2(pop_size, D, lb, ub, max_fes, func_id):

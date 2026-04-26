@@ -1,8 +1,12 @@
+import os
+import csv
 import numpy as np
 import random
 import time
 
-from CEC2017.algorithms.rao2 import rao2
+from tqdm import tqdm
+
+from CEC2017.algorithms import ALGORITHMS
 from CEC2017.functions.core import reset_fes, get_fes, get_optimal_value
 from CEC2017.visualization.plot_convergence import plot_convergence
 from CEC2017.visualization.plot_3d_surface import plot_3d_surface
@@ -46,8 +50,67 @@ def _extract_errors_at_checkpoints(history, max_fes, f_star):
     return errors
 
 
-def run_experiment(func_id, dimension, lb, ub, pop_size, max_fes, runs):
+def _append_comparison_csv(algo_name, func_id, dimension, final_arr, total_time):
+    """
+    Upsert one summary row per (algo_name, func_id, dimension) into
+    results/comparison_summary.csv.  If a row with the same key already
+    exists it is replaced; otherwise the new row is appended.
+    """
+    csv_path = "results/comparison_summary.csv"
+    os.makedirs("results", exist_ok=True)
 
+    header = [
+        "Algorithm", "FuncID", "Dimension",
+        "Best_Error", "Worst_Error", "Median_Error",
+        "Mean_Error", "Std_Dev", "Time_s",
+    ]
+
+    new_row = [
+        algo_name,
+        func_id,
+        dimension,
+        f"{np.min(final_arr):.6e}",
+        f"{np.max(final_arr):.6e}",
+        f"{np.median(final_arr):.6e}",
+        f"{np.mean(final_arr):.6e}",
+        f"{np.std(final_arr):.6e}",
+        f"{total_time:.2f}",
+    ]
+
+    # Read existing rows (if any)
+    rows = []
+    if os.path.exists(csv_path):
+        with open(csv_path, "r", newline="") as f:
+            reader = csv.reader(f)
+            existing_header = next(reader, None)  # skip header
+            for row in reader:
+                if row:  # skip blank lines
+                    rows.append(row)
+
+    # Replace existing row with same (Algorithm, FuncID, Dimension) key,
+    # or append if no match found.
+    key = (str(algo_name), str(func_id), str(dimension))
+    replaced = False
+    for idx, row in enumerate(rows):
+        if len(row) >= 3 and (row[0], row[1], row[2]) == key:
+            rows[idx] = new_row
+            replaced = True
+            break
+    if not replaced:
+        rows.append(new_row)
+
+    # Write everything back
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        writer.writerows(rows)
+
+
+def run_experiment(algo_name, func_id, dimension, lb, ub, pop_size, max_fes, runs):
+
+    assert algo_name in ALGORITHMS, f"Unknown algorithm: {algo_name}"
+
+    algorithm = ALGORITHMS[algo_name]
     f_star = get_optimal_value(func_id)
 
     all_histories = []           # raw (fes, fitness) histories per run
@@ -60,7 +123,7 @@ def run_experiment(func_id, dimension, lb, ub, pop_size, max_fes, runs):
     # ⏱️ Start timer
     start_time = time.time()
 
-    for run in range(runs):
+    for run in tqdm(range(runs), desc=f"{algo_name.upper()} F{func_id} D{dimension}"):
 
         random.seed(run)
         np.random.seed(run)
@@ -68,7 +131,7 @@ def run_experiment(func_id, dimension, lb, ub, pop_size, max_fes, runs):
         # Reset FES counter for each independent run
         reset_fes()
 
-        best, history = rao2(pop_size, dimension, lb, ub, max_fes, func_id)
+        best, history = algorithm(pop_size, dimension, lb, ub, max_fes, func_id)
 
         fes_used = get_fes()
         # Use the last recorded best fitness from the history
@@ -85,8 +148,6 @@ def run_experiment(func_id, dimension, lb, ub, pop_size, max_fes, runs):
             best_value = last_best_f
             best_solution = best
         best_solutions.append(best.copy())
-
-        print(f"Run {run+1:02d} | Error: {error:.6e} | FES used: {fes_used}")
 
     end_time = time.time()
     total_time = end_time - start_time
@@ -106,14 +167,19 @@ def run_experiment(func_id, dimension, lb, ub, pop_size, max_fes, runs):
         "Std Error": np.std(final_arr) / np.sqrt(len(final_arr)),
     }
 
-    save_results(func_id, dimension, error_matrix, stats, total_time, best_solution, best_solutions, runs)
-    plot_convergence(all_histories, func_id, dimension, f_star)
+    # ── Save results with algo-specific paths ──
+    save_results(func_id, dimension, error_matrix, stats, total_time,
+                 best_solution, best_solutions, runs, algo_name=algo_name)
+    plot_convergence(all_histories, func_id, dimension, f_star, algo_name=algo_name)
 
     if dimension == 2:
-        plot_3d_surface(func_id, best_solution, lb, ub)
-        plot_2d_contour(func_id, best_solution, lb, ub)
+        plot_3d_surface(func_id, best_solution, lb, ub, algo_name=algo_name)
+        plot_2d_contour(func_id, best_solution, lb, ub, algo_name=algo_name)
 
-    print(f"\nF{func_id} | D={dimension} | MaxFES={max_fes}")
+    # ── Append to cross-algorithm comparison CSV ──
+    _append_comparison_csv(algo_name, func_id, dimension, final_arr, total_time)
+
+    print(f"\nF{func_id} | D={dimension} | MaxFES={max_fes} | Algorithm={algo_name.upper()}")
     print(f"Best Value: {stats['Best Value']:.6e}")
     print(f"Best Error: {stats['Best Error']:.6e}")
     print(f"Worst Err : {stats['Worst Error']:.6e}")

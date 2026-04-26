@@ -7,7 +7,7 @@ from CEC2017.functions.core import get_fes, fes_counter
 from CEC2017.functions.get_function import get_function
 
 
-def plot_2d_contour(func_id, best_solution, lb, ub):
+def plot_2d_contour(func_id, best_solution, lb, ub, algo_name=None):
     # D = 2 is enforced for visualization
     pass
 
@@ -64,10 +64,15 @@ def plot_2d_contour(func_id, best_solution, lb, ub):
 
     # 7. Save and Handle the Folder Structure
     # This matches the requested format: results > Fn > Fn_2D.png
-    folder = f"results/F{func_id}"
+    if algo_name:
+        folder = f"results/{algo_name}/F{func_id}"
+        prefix = f"{algo_name}_F{func_id}"
+    else:
+        folder = f"results/F{func_id}"
+        prefix = f"F{func_id}"
     os.makedirs(folder, exist_ok=True)
 
-    save_path = f"{folder}/F{func_id}_2D.png"
+    save_path = f"{folder}/{prefix}_2D.png"
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
 

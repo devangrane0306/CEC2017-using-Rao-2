@@ -1,7 +1,7 @@
 import os
 
 
-def save_results(func_id, dimension, error_matrix, stats, total_time, best_solution, best_solutions, runs):
+def save_results(func_id, dimension, error_matrix, stats, total_time, best_solution, best_solutions, runs, algo_name=None):
     """
     Save results in CEC2017 official .txt format with additional statistics.
 
@@ -11,10 +11,15 @@ def save_results(func_id, dimension, error_matrix, stats, total_time, best_solut
     best_solutions: list of best solutions for each run
     runs: number of runs
     """
-    folder = f"results/F{func_id}"
+    if algo_name:
+        folder = f"results/{algo_name}/F{func_id}"
+        prefix = f"{algo_name}_F{func_id}"
+    else:
+        folder = f"results/F{func_id}"
+        prefix = f"F{func_id}"
     os.makedirs(folder, exist_ok=True)
 
-    file_path = f"{folder}/F{func_id}_D{dimension}.txt"
+    file_path = f"{folder}/{prefix}_D{dimension}.txt"
 
     with open(file_path, "w") as f:
         # ── 14 × RUNS error matrix ──
@@ -44,7 +49,7 @@ def save_results(func_id, dimension, error_matrix, stats, total_time, best_solut
 
     # Save best solution to a separate file
     if best_solution is not None:
-        solution_path = f"{folder}/F{func_id}_D{dimension}_solution.txt"
+        solution_path = f"{folder}/{prefix}_D{dimension}_solution.txt"
         with open(solution_path, "w") as f:
             f.write(f"Best solution for F{func_id} D{dimension}:\n")
             f.write("Decision variables:\n")

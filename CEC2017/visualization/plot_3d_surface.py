@@ -6,7 +6,7 @@ from CEC2017.functions.core import get_fes, fes_counter
 from CEC2017.functions.get_function import get_function
 
 
-def plot_3d_surface(func_id, best_solution, lb, ub, resolution=100):
+def plot_3d_surface(func_id, best_solution, lb, ub, resolution=100, algo_name=None):
     """
     Plot 3D surface of a 2D function landscape.
     Vectorized — evaluates all grid points in one pass, no nested loop.
@@ -70,8 +70,13 @@ def plot_3d_surface(func_id, best_solution, lb, ub, resolution=100):
     ax.set_zlim(offset_val, np.max(Z))
     ax.legend()
 
-    folder = f"results/F{func_id}"
-    save_path = f"{folder}/F{func_id}_3D.png"
+    if algo_name:
+        folder = f"results/{algo_name}/F{func_id}"
+        prefix = f"{algo_name}_F{func_id}"
+    else:
+        folder = f"results/F{func_id}"
+        prefix = f"F{func_id}"
+    save_path = f"{folder}/{prefix}_3D.png"
     os.makedirs(folder, exist_ok=True)
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
