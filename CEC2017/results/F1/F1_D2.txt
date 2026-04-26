@@ -18,8 +18,8 @@ Best Error	6.591141e-01
 Worst Error	5.516926e+03
 Median Error	8.372459e+01
 Mean Error	4.108102e+02
-Std Error	9.612128e+02
-Time	53.28
+Std Dev	9.612128e+02
+Std Error	1.345967e+02
+Time	29.06
 Ideal	1.000000e+02
 Runs	51
-StdError	1.345967e+02

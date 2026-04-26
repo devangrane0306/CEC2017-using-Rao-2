@@ -9,10 +9,10 @@ __version__ = "0.1.1"
 __author__ = "Lakshya Maheshwari"
 __email__ = "your.email@example.com"  # Replace with your actual email
 
-import  algorithms
-import  functions
-import  utils
-import  visualization
-from results import save_results
+from . import algorithms
+from . import functions
+from . import utils
+from . import visualization
+from .results import save_results
 
 __all__ = ["algorithms", "functions", "utils", "visualization", "save_results"]

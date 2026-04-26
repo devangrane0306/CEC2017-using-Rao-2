@@ -1,4 +1,4 @@
-DIMENSIONS = [2, 10, 20, 30]
+DIMENSIONS = [2, 10, 20, 30, 50, 100]
 
 ALGORITHMS = ["rao1", "rao2", "rao3", "fisa"]
 

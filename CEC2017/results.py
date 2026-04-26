@@ -35,13 +35,13 @@ def save_results(func_id, dimension, error_matrix, stats, total_time, best_solut
         f.write(f"Worst Error\t{stats['Worst Error']:.6e}\n")
         f.write(f"Median Error\t{stats['Median Error']:.6e}\n")
         f.write(f"Mean Error\t{stats['Mean Error']:.6e}\n")
+        f.write(f"Std Dev\t{stats['Std Dev']:.6e}\n")
         f.write(f"Std Error\t{stats['Std Error']:.6e}\n")
         f.write(f"Time\t{total_time:.2f}\n")
 
         # ── Additional statistics for summary generation ──
         f.write(f"Ideal\t{func_id * 100:.6e}\n")
         f.write(f"Runs\t{runs}\n")
-        f.write(f"StdError\t{stats['Std Error'] / np.sqrt(runs):.6e}\n")
 
     print(f"Results saved: {file_path}")
 

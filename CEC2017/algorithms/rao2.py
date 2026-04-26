@@ -89,7 +89,6 @@ def rao2(pop_size, D, lb, ub, max_fes, func_id):
             if fitness[i] < running_best_f:
                 running_best_f = fitness[i]
                 running_best   = population[i].copy()
-
-            fitness_history.append((get_fes(), running_best_f))
+                fitness_history.append((get_fes(), running_best_f))
 
     return running_best, fitness_history

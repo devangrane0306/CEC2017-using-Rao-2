@@ -8,6 +8,7 @@ Usage:
 
 import os
 import csv
+import re
 import sys
 
 # Add parent directory to sys.path to allow running as a script from within the package
@@ -16,7 +17,14 @@ parent_dir = os.path.dirname(current_dir)
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from config import DIMENSIONS
+
+# Keys we recognise in result files (order matters for CSV columns)
+STAT_KEYS = {
+    "Best Value", "Best Error", "Worst Error", "Median Error",
+    "Mean Error", "Std Dev", "Std Error", "Time", "Ideal", "Runs",
+    # Legacy keys (from old output format) mapped during parsing
+    "Best", "Worst", "Median", "Mean", "Std", "StdError",
+}
 
 
 def parse_result_file(filepath):
@@ -28,10 +36,23 @@ def parse_result_file(filepath):
                 line = line.strip()
                 if not line:
                     continue
-                # Summary lines are formatted as: "Key\tValue"
                 parts = line.split("\t")
-                if len(parts) == 2 and parts[0] in ("Best Value", "Best Error", "Worst Error", "Median Error", "Mean Error", "Std Error", "Time", "Ideal", "Runs", "StdError", "Best", "Worst", "Median", "Mean", "Std"):
-                    stats[parts[0]] = parts[1]
+                if len(parts) == 2 and parts[0] in STAT_KEYS:
+                    key = parts[0]
+                    # Normalise legacy keys to current names
+                    if key == "Best":
+                        key = "Best Error"
+                    elif key == "Worst":
+                        key = "Worst Error"
+                    elif key == "Median":
+                        key = "Median Error"
+                    elif key == "Mean":
+                        key = "Mean Error"
+                    elif key == "Std":
+                        key = "Std Dev"
+                    elif key == "StdError":
+                        key = "Std Error"
+                    stats[key] = parts[1]
     except FileNotFoundError:
         pass
     return stats
@@ -42,9 +63,8 @@ def parse_best_solution(filepath, dimension):
     try:
         with open(filepath, "r") as f:
             lines = f.readlines()
-            # Decision variables start after the first line
             decision_vars = {}
-            for line in lines[1:]:  # Skip first line
+            for line in lines[1:]:
                 line = line.strip()
                 if line and '\t' in line:
                     parts = line.split('\t')
@@ -56,87 +76,100 @@ def parse_best_solution(filepath, dimension):
         return None
 
 
+def _detect_dimensions(results_dir):
+    """Auto-detect all dimensions from existing result files."""
+    dims = set()
+    pattern = re.compile(r"F\d+_D(\d+)\.txt$")
+    for func_dir in os.listdir(results_dir):
+        func_path = os.path.join(results_dir, func_dir)
+        if not os.path.isdir(func_path):
+            continue
+        for fname in os.listdir(func_path):
+            m = pattern.match(fname)
+            if m:
+                dims.add(int(m.group(1)))
+    return sorted(dims)
+
+
 def build_summary():
     results_dir = "results"
     output_file = os.path.join(results_dir, "summary.csv")
 
-    # Header: Function | Ideal Value | Best Value | Best Error | Worst Error | Mean Error | Std Dev | Std Error | x1 | x2 | ... | xD
-    header = ["Function", "Ideal Value", "Best Value", "Best Error", "Worst Error", "Mean Error", "Std Dev", "Std Error"]
+    # Auto-detect dimensions from result files
+    dimensions = _detect_dimensions(results_dir)
+    if not dimensions:
+        print("No result files found in results/ directory.")
+        return
 
-    # Add decision variable columns based on dimension
-    for dim in DIMENSIONS:
-        for i in range(dim):
-            header.append(f"x{i+1}")
+    print(f"Detected dimensions: {dimensions}")
+
+    # CSV columns (per dimension block):
+    # Best Value | Best Error | Worst Error | Mean Error | Std Dev | Std Error | x1..xD
+    header = ["Function"]
+
+    for dim in dimensions:
+        prefix = f"D{dim}_"
+        header.extend([
+            f"{prefix}Best Value",
+            f"{prefix}Best Error",
+            f"{prefix}Worst Error",
+            f"{prefix}Mean Error",
+            f"{prefix}Std Dev",
+            f"{prefix}Std Error",
+        ])
 
     rows = []
 
     for func_id in range(1, 31):
         row = [f"F{func_id}"]
-
-        # Calculate ideal value
         ideal_value = func_id * 100
-        row.append(f"{ideal_value:.6e}")
 
-        # Initialize variables to store best solution across dimensions
-        best_overall_solution = None
-        best_overall_value = float('inf')
-        best_overall_dimension = None
-
-        # Process each dimension
-        for dim in DIMENSIONS:
+        for dim in dimensions:
             filepath = os.path.join(results_dir, f"F{func_id}", f"F{func_id}_D{dim}.txt")
             stats = parse_result_file(filepath)
 
-            solution_path = os.path.join(results_dir, f"F{func_id}", f"F{func_id}_D{dim}_solution.txt")
-            decision_vars = parse_best_solution(solution_path, dim)
-
             if stats:
                 try:
-                    if "Best Value" in stats:
-                        best_value = float(stats["Best Value"])
-                        best_error = float(stats.get("Best Error", "—"))
-                    else:
-                        best_error = float(stats.get("Best", "—"))
-                        best_value = best_error + ideal_value if best_error != "—" else "—"
-
-                    worst_error = float(stats.get("Worst Error", stats.get("Worst", "—")))
-                    mean_error = float(stats.get("Mean Error", stats.get("Mean", "—")))
-                    std_dev_error = float(stats.get("Std Error", stats.get("Std", "—")))
-                    std_error = float(stats.get("StdError", "—"))
+                    best_value = float(stats.get("Best Value", "—"))
                 except (ValueError, TypeError):
-                    best_value = best_error = worst_error = mean_error = std_dev_error = std_error = "—"
+                    best_value = "—"
 
-                # Track best solution across dimensions
-                if isinstance(best_value, (int, float)) and best_value < best_overall_value:
-                    best_overall_value = best_value
-                    best_overall_solution = decision_vars
-                    best_overall_dimension = dim
+                try:
+                    best_error = float(stats.get("Best Error", "—"))
+                except (ValueError, TypeError):
+                    best_error = "—"
 
-                # Add statistics to row
+                try:
+                    worst_error = float(stats.get("Worst Error", "—"))
+                except (ValueError, TypeError):
+                    worst_error = "—"
+
+                try:
+                    mean_error = float(stats.get("Mean Error", "—"))
+                except (ValueError, TypeError):
+                    mean_error = "—"
+
+                try:
+                    std_dev = float(stats.get("Std Dev", "—"))
+                except (ValueError, TypeError):
+                    std_dev = "—"
+
+                try:
+                    std_error = float(stats.get("Std Error", "—"))
+                except (ValueError, TypeError):
+                    std_error = "—"
+
                 row.extend([
                     f"{best_value:.6e}" if isinstance(best_value, (int, float)) else best_value,
                     f"{best_error:.6e}" if isinstance(best_error, (int, float)) else best_error,
                     f"{worst_error:.6e}" if isinstance(worst_error, (int, float)) else worst_error,
                     f"{mean_error:.6e}" if isinstance(mean_error, (int, float)) else mean_error,
-                    f"{std_dev_error:.6e}" if isinstance(std_dev_error, (int, float)) else std_dev_error,
+                    f"{std_dev:.6e}" if isinstance(std_dev, (int, float)) else std_dev,
                     f"{std_error:.6e}" if isinstance(std_error, (int, float)) else std_error,
                 ])
-
-                # Add decision variables if available
-                if decision_vars:
-                    for i in range(dim):
-                        var_name = f"x{i+1}"
-                        value = decision_vars.get(var_name, "—")
-                        row.append(f"{value:.6e}")
-                else:
-                    row.extend(["—"] * dim)
             else:
-                # No stats available, fill with placeholders
-                row.extend(["—"] * (7 + dim))
-
-        # If no data available for this function at all
-        if len(row) == 1:  # Only function name
-            row.extend(["—"] * (7 + max(DIMENSIONS) if DIMENSIONS else 0))
+                # No results for this function/dimension
+                row.extend(["—"] * 6)
 
         rows.append(row)
 
@@ -148,10 +181,9 @@ def build_summary():
         writer.writerows(rows)
 
     print(f"Summary saved to: {output_file}")
-    print(f"Functions: F1–F30 | Dimensions: {DIMENSIONS}")
+    print(f"Functions: F1–F30 | Dimensions: {dimensions}")
     print(f"Total entries: {len(rows)}")
     print(f"Columns: {len(header)}")
-    print(f"Header: {', '.join(header[:8])} {'...' if len(header) > 8 else ''}")
 
 
 if __name__ == "__main__":

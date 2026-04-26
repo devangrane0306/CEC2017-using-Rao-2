@@ -3,7 +3,7 @@ import random
 import time
 
 from algorithms.rao2 import rao2
-from functions.core import evaluate, reset_fes, get_fes, get_optimal_value
+from functions.core import reset_fes, get_fes, get_optimal_value
 from visualization.plot_convergence import plot_convergence
 from visualization.plot_3d_surface import plot_3d_surface
 from visualization.plot_2d_contour import plot_2d_contour
@@ -70,16 +70,18 @@ def run_experiment(func_id, dimension, lb, ub, pop_size, max_fes, runs):
         best, history = rao2(pop_size, dimension, lb, ub, max_fes, func_id)
 
         fes_used = get_fes()
-        f, _ = evaluate(best, func_id)
-        error = max(f - f_star, 0.0)
+        # Use the last recorded best fitness from the history
+        # instead of calling evaluate() again (which would waste 1 FES)
+        _, last_best_f = history[-1]
+        error = max(last_best_f - f_star, 0.0)
 
         all_histories.append(history)
         checkpoint_errors = _extract_errors_at_checkpoints(history, max_fes, f_star)
         all_checkpoint_errors.append(checkpoint_errors)
         final_errors.append(error)
 
-        if f < best_value:
-            best_value = f
+        if last_best_f < best_value:
+            best_value = last_best_f
             best_solution = best
         best_solutions.append(best.copy())
 
@@ -99,7 +101,8 @@ def run_experiment(func_id, dimension, lb, ub, pop_size, max_fes, runs):
         "Worst Error": np.max(final_arr),
         "Median Error": np.median(final_arr),
         "Mean Error": np.mean(final_arr),
-        "Std Error": np.std(final_arr),
+        "Std Dev": np.std(final_arr),
+        "Std Error": np.std(final_arr) / np.sqrt(len(final_arr)),
     }
 
     save_results(func_id, dimension, error_matrix, stats, total_time, best_solution, best_solutions, runs)
@@ -115,5 +118,6 @@ def run_experiment(func_id, dimension, lb, ub, pop_size, max_fes, runs):
     print(f"Worst Err : {stats['Worst Error']:.6e}")
     print(f"Median Err: {stats['Median Error']:.6e}")
     print(f"Mean Err  : {stats['Mean Error']:.6e}")
-    print(f"Std Err   : {stats['Std Error']:.6e}")
+    print(f"Std Dev   : {stats['Std Dev']:.6e}")
+    print(f"Std Error : {stats['Std Error']:.6e}")
     print(f"Time      : {total_time:.2f} seconds")
