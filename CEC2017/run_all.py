@@ -1,6 +1,6 @@
-from summarize import build_summary
-from config import POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
-from runner import run_experiment
+from CEC2017.summarize import build_summary
+from CEC2017.config import POP_SIZE, MAX_FES_FACTOR, RUNS, LOWER_BOUND, UPPER_BOUND
+from CEC2017.runner import run_experiment
 import os
 import sys
 

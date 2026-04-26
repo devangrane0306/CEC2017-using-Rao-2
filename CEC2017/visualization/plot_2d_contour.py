@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import os
 
 
-from functions.core import get_fes, fes_counter
-from functions.get_function import get_function
+from CEC2017.functions.core import get_fes, fes_counter
+from CEC2017.functions.get_function import get_function
 
 
 def plot_2d_contour(func_id, best_solution, lb, ub):

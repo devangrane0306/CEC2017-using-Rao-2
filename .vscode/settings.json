@@ -1,3 +1,5 @@
 {
-    "claudeCode.useTerminal": true
+    "python.analysis.extraPaths": [
+        "./CEC2017"
+    ]
 }
