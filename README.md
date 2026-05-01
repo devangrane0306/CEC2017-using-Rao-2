@@ -17,9 +17,9 @@ This repository provides a highly-optimized, mathematically rigorous Python impl
 Designed for researchers and practitioners, this framework abandons black-box dependencies in favor of **1-to-1 mathematical parity** with the original competition C source codes. It comes pre-packaged with four state-of-the-art parameter-less metaheuristics (**Rao-1, Rao-2, Rao-3, and FISA**) and features heavily accelerated multiprocessing execution.
 
 <div align="center">
-  <img src="assets/rao2_F5_3D.png" width="32%" alt="3D Surface of Function 5">
-  <img src="assets/rao2_F5_2D.png" width="32%" alt="2D Contour of Function 5">
-  <img src="assets/rao2_convergence_D2.png" width="32%" alt="Convergence Graph">
+  <img src="assets/rao2_F5_3D.png" height="250" alt="3D Surface of Function 5">
+  <img src="assets/rao2_F5_2D.png" height="250" alt="2D Contour of Function 5">
+  <img src="assets/rao2_convergence_D2.png" height="250" alt="Convergence Graph">
   <p><i>Left: 3D Surface. Middle: 2D Contour Map. Right: Algorithm Convergence Tracking.</i></p>
 </div>
 
