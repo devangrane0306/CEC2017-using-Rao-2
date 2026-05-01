@@ -1,4 +1,0 @@
-Best solution for F3 D2:
-Decision variables:
-x1	-5.593833e+01
-x2	4.543065e+00

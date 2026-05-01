@@ -1,7 +1,0 @@
-numpy
-scipy
-matplotlib
-
-[dev]
-pytest
-flake8

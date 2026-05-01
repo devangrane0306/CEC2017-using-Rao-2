@@ -1,4 +1,0 @@
-Best solution for F4 D2:
-Decision variables:
-x1	3.251115e+01
-x2	7.756902e+00

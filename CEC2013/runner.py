@@ -93,12 +93,15 @@ def append_to_summary_csv(algo_name, func_id, dimension, stats,
             r["Speedup"] = ""
 
     # Write entire file (sorted, with updated speedups)
-    with open(csv_path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=_SUMMARY_CSV_HEADER)
-        writer.writeheader()
-        writer.writerows(all_rows)
-
-    print(f"Summary CSV updated: {csv_path}")
+    try:
+        with open(csv_path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=_SUMMARY_CSV_HEADER)
+            writer.writeheader()
+            writer.writerows(all_rows)
+        print(f"Summary CSV updated: {csv_path}")
+    except PermissionError:
+        print(f"\n[WARNING] Permission denied to write {csv_path}. Is it open in Excel?")
+        print("          Skipping CSV update for this iteration to prevent crash.")
 
 
 # ── Batch comparison CSV collection ──
@@ -146,11 +149,15 @@ def write_comparison_csv():
         keyed[key] = row
 
     # Write all
-    with open(csv_path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=header)
-        writer.writeheader()
-        for key in sorted(keyed.keys(), key=lambda k: (str(k[0]), int(k[1]), int(k[2]))):
-            writer.writerow(keyed[key])
+    try:
+        with open(csv_path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=header)
+            writer.writeheader()
+            for key in sorted(keyed.keys(), key=lambda k: (str(k[0]), int(k[1]), int(k[2]))):
+                writer.writerow(keyed[key])
+    except PermissionError:
+        print(f"\n[WARNING] Permission denied to write {csv_path}. Is it open in Excel?")
+        print("          Skipping CSV update for this batch to prevent crash.")
 
     _comparison_rows = []  # Clear for next batch
 

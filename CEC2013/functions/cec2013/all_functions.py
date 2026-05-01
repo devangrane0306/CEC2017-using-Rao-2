@@ -235,7 +235,7 @@ def rastrigin_func(x, Os, Mr1, Mr2):
     y = rotatefunc(y, Mr2)
     cond = np.power(alpha, 1.0 * np.arange(len(y)) / (len(y) - 1) / 2.0)
     y = y * cond
-    y = rotatefunc(y, Mr1)  # third rotation with first matrix (matches C code)
+    y = rotatefunc(y, Mr1)
     f = np.sum(y**2 - 10.0 * np.cos(2.0 * PI * y) + 10.0)
     return f
 
@@ -252,7 +252,7 @@ def step_rastrigin_func(x, Os, Mr1, Mr2):
     y = rotatefunc(y, Mr2)
     cond = np.power(alpha, 1.0 * np.arange(len(y)) / (len(y) - 1) / 2.0)
     y = y * cond
-    y = rotatefunc(y, Mr1)   # third rotation with Mr1
+    y = rotatefunc(y, Mr1)
     f = np.sum(y**2 - 10.0 * np.cos(2.0 * PI * y) + 10.0)
     return f
 
@@ -482,13 +482,17 @@ def _evaluate_point(x, func_num, nx, M, OShift):
     elif func_num == 10:
         return griewank_func(x, OShift[9], M[9], M[0]) - 500.0
     elif func_num == 11:
-        return rastrigin_func(x, OShift[0], M[0], M[1]) - 400.0
+        # F11: Rastrigin's Function - SEPARABLE (no rotation), use identity matrix
+        I = np.eye(nx)
+        return rastrigin_func(x, OShift[0], I, I) - 400.0
     elif func_num == 12:
         return rastrigin_func(x, OShift[1], M[1], M[2]) - 300.0
     elif func_num == 13:
         return step_rastrigin_func(x, OShift[2], M[2], M[3]) - 200.0
     elif func_num == 14:
-        return schwefel_func(x, OShift[3], M[3], M[4]) - 100.0
+        # F14: Schwefel's Function - UN-rotated, use identity matrix
+        I = np.eye(nx)
+        return schwefel_func(x, OShift[3], I, I) - 100.0
     elif func_num == 15:
         return schwefel_func(x, OShift[4], M[4], M[5]) + 100.0
     elif func_num == 16:
@@ -598,4 +602,4 @@ def evaluate(func_num: int, x: np.ndarray) -> float:
     func_info = get_function(func_num)
     if func_info is None:
         raise ValueError(f"Invalid function number: {func_num}. Must be 1-28")
-    return func_info["objective"](x)
+    return func_info["objective"](x)
